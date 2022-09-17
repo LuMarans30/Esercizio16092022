@@ -1,6 +1,4 @@
-import javax.lang.model.type.ArrayType;
 import javax.swing.*;
-import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import com.formdev.flatlaf.FlatDarkLaf;
@@ -10,7 +8,6 @@ import java.awt.event.*;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -30,16 +27,19 @@ public class Form1 extends JFrame{
     private JList lstOrdini;
     private JButton btnTotale;
     private JTextField txtTotale;
+    private JButton btnSalvaSuFile;
     private JButton btnOrdina;
     private ArrayList<Pietanza> menu;
     private ArrayList<Pietanza> ordini;
     private DefaultListModel dfl;
+    private File file;
 
 
     public Form1() {
 
         ordini = new ArrayList<>();
         dfl = new DefaultListModel<>();
+        file = null;
 
         try {
             createMenu();
@@ -86,12 +86,6 @@ public class Form1 extends JFrame{
 
                 double totale = ordini.stream().mapToDouble(o -> o.getPrezzo()).sum();
                 txtTotale.setText(totale + " €");
-                try {
-                    salvaFile();
-                }catch(Exception ex)
-                {
-                    showMessageDialog(null,  "Errore di scrittura del file!", "Errore", JOptionPane.ERROR_MESSAGE);
-                }
             }
         });
 
@@ -112,6 +106,22 @@ public class Form1 extends JFrame{
                     ordini.remove(dfl.getElementAt(index));
                     dfl.removeElementAt(index);
                     btnTotale.doClick();
+                }
+            }
+        });
+        btnSalvaSuFile.addActionListener(new ActionListener() {
+            /**
+             * Invoked when an action occurs.
+             * Salva le ordinazioni su un file
+             * @param e the event to be processed
+             */
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    salvaFile();
+                }catch(Exception ex)
+                {
+                    showMessageDialog(null,  "Errore di scrittura del file!", "Errore", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
@@ -164,14 +174,17 @@ public class Form1 extends JFrame{
         fileChooser.setDialogTitle("Salva le ordinazioni");
         fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("TXT files", "txt"));
         fileChooser.setAcceptAllFileFilterUsed(true);
+        if(file==null) {
+            if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+                file = fileChooser.getSelectedFile();
+                scriviSuFile();
+            }
+        }else
+            scriviSuFile();
 
-        if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
-            File file = fileChooser.getSelectedFile();
-            scriviSuFile(file);
-        }
     }
 
-    private void scriviSuFile(File file) throws Exception
+    private void scriviSuFile() throws Exception
     {
         FileWriter fileWriter = new FileWriter(file);
         int i;
